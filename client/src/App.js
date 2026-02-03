@@ -9,6 +9,8 @@ import Odontogram from './components/Odontogram/Odontogram';
 import Appointments from './components/Appointments/Appointments';
 import Prospects from './components/Prospects/Prospects';
 import Prescriptions from './components/Prescriptions/Prescriptions';
+import Patients from './components/Patients/Patients';
+import Billing from './components/Billing/Billing';
 import './App.css';
 
 function App() {
@@ -37,23 +39,9 @@ function App() {
       case 'prescriptions':
         return <Prescriptions />;
       case 'patients':
-        return (
-          <div className="page-container">
-            <div className="page-header">
-              <div className="header-content">
-                <span className="header-icon">👥</span>
-                <div>
-                  <h1>Pacientes</h1>
-                  <p>Gestionar información de pacientes y historiales médicos</p>
-                </div>
-              </div>
-            </div>
-            <div className="coming-soon">
-              <h2>Próximamente</h2>
-              <p>Esta funcionalidad estará disponible pronto.</p>
-            </div>
-          </div>
-        );
+        return <Patients />;
+      case 'billing':
+        return <Billing />;
       default:
         return <Dashboard />;
     }

@@ -62,6 +62,12 @@ const Sidebar = ({ currentView, onViewChange, user }) => {
       view: 'prescriptions'
     },
     {
+      id: 'billing',
+      label: t('nav.billing'),
+      icon: '💰',
+      view: 'billing'
+    },
+    {
       id: 'lab-providers',
       label: t('nav.lab_providers'),
       icon: '🏥',
@@ -150,7 +156,7 @@ const Sidebar = ({ currentView, onViewChange, user }) => {
 
         <div className="nav-section">
           <h4 className="nav-section-title">GESTIÓN FINANCIERA</h4>
-          {menuItems.slice(5, 7).map((item) => (
+          {menuItems.slice(5, 8).map((item) => (
             <button
               key={item.id}
               className={`nav-item ${currentView === item.view ? 'active' : ''}`}
@@ -164,7 +170,7 @@ const Sidebar = ({ currentView, onViewChange, user }) => {
 
         <div className="nav-section">
           <h4 className="nav-section-title">OPERACIONES</h4>
-          {menuItems.slice(7).map((item) => (
+          {menuItems.slice(8).map((item) => (
             <button
               key={item.id}
               className={`nav-item ${currentView === item.view ? 'active' : ''}`}
