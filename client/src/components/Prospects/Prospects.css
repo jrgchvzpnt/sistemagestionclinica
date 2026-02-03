@@ -1,0 +1,280 @@
+.prospects {
+  padding: 24px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+.prospects .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.prospects .stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.prospects .stat-icon {
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+
+.prospects .stat-content h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 8px 0;
+}
+
+.prospects .stat-content p {
+  color: #4a5568;
+  font-weight: 500;
+  margin: 0 0 4px 0;
+}
+
+.prospects .stat-note {
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+.prospects .filters-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.prospects .search-box {
+  margin-bottom: 16px;
+}
+
+.prospects .search-box input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.prospects .filter-dropdowns {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.prospects .filter-dropdowns select {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  min-width: 150px;
+}
+
+.prospects .prospects-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.prospects .section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0 0 8px 0;
+}
+
+.prospects .section-header p {
+  color: #718096;
+  margin: 0 0 24px 0;
+}
+
+.prospects .prospects-table {
+  overflow-x: auto;
+}
+
+.prospects .table-header {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1.5fr 1.5fr 1fr 1fr 1fr;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.prospects .table-row {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1.5fr 1.5fr 1fr 1fr 1fr;
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid #e2e8f0;
+  align-items: center;
+}
+
+.prospects .table-row:hover {
+  background-color: #f7fafc;
+}
+
+.prospects .prospect-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.prospects .prospect-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.prospects .prospect-info h4 {
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0 0 4px 0;
+  font-size: 0.95rem;
+}
+
+.prospects .prospect-info p {
+  color: #718096;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.prospects .contact-info p {
+  margin: 0 0 4px 0;
+  font-size: 0.875rem;
+  color: #4a5568;
+}
+
+.prospects .source-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prospects .source-icon {
+  font-size: 1.2rem;
+}
+
+.prospects .interest-badge {
+  background: #edf2f7;
+  color: #4a5568;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.prospects .assigned-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prospects .assigned-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.prospects .assigned-info p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #4a5568;
+}
+
+.prospects .status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.prospects .status-badge.status-new {
+  background: #bee3f8;
+  color: #2b6cb0;
+}
+
+.prospects .status-badge.status-contacted {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.prospects .status-badge.status-converted {
+  background: #d6f5d6;
+  color: #22543d;
+}
+
+.prospects .status-badge.status-lost {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.prospects .action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.prospects .btn-action {
+  padding: 6px 12px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #4a5568;
+}
+
+.prospects .btn-action:hover {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+}
+
+@media (max-width: 768px) {
+  .prospects .table-header,
+  .prospects .table-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .prospects .filter-dropdowns {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .prospects .filter-dropdowns select {
+    min-width: auto;
+  }
+}
