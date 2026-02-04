@@ -589,6 +589,212 @@
   margin-bottom: 0;
 }
 
+/* New Odontogram Modal Styles */
+.odontogram .large-modal {
+  max-width: 1200px;
+  max-height: 95vh;
+}
+
+.odontogram .form-section {
+  margin-bottom: 32px;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.odontogram .form-section h4 {
+  margin: 0 0 16px 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.odontogram .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.odontogram .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.odontogram .form-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.odontogram .form-group input,
+.odontogram .form-group select,
+.odontogram .form-group textarea {
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  transition: border-color 0.2s;
+}
+
+.odontogram .form-group input:focus,
+.odontogram .form-group select:focus,
+.odontogram .form-group textarea:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+.odontogram .instruction-text {
+  color: #718096;
+  font-size: 0.875rem;
+  margin-bottom: 16px;
+  font-style: italic;
+}
+
+/* Condition Legend */
+.odontogram .condition-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.odontogram .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #4a5568;
+}
+
+.odontogram .legend-icon {
+  font-size: 1.2rem;
+}
+
+/* Interactive Teeth Grid */
+.odontogram .interactive-teeth-grid {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.odontogram .tooth-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.odontogram .tooth.interactive {
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid #e2e8f0;
+  background: white;
+}
+
+.odontogram .tooth.interactive:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.odontogram .tooth-condition-select {
+  font-size: 0.75rem;
+  padding: 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: white;
+  min-width: 80px;
+}
+
+/* Tooth Condition Classes */
+.odontogram .tooth-healthy {
+  border-color: #48bb78;
+  background: #f0fff4;
+}
+
+.odontogram .tooth-cavity {
+  border-color: #f56565;
+  background: #fed7d7;
+}
+
+.odontogram .tooth-filling {
+  border-color: #4299e1;
+  background: #ebf8ff;
+}
+
+.odontogram .tooth-crown {
+  border-color: #ed8936;
+  background: #fef5e7;
+}
+
+.odontogram .tooth-missing {
+  border-color: #a0aec0;
+  background: #f7fafc;
+  opacity: 0.6;
+}
+
+.odontogram .tooth-root-canal {
+  border-color: #9f7aea;
+  background: #faf5ff;
+}
+
+/* Summary Stats */
+.odontogram .summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.odontogram .summary-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+}
+
+.odontogram .summary-stat .stat-label {
+  font-size: 0.875rem;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.odontogram .summary-stat .stat-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a202c;
+  background: #3182ce;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  min-width: 30px;
+  text-align: center;
+}
+
+/* Button Disabled State */
+.odontogram .btn-primary:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.odontogram .btn-primary:disabled:hover {
+  background: #a0aec0;
+  transform: none;
+}
+
 @media (max-width: 768px) {
   .odontogram .table-header,
   .odontogram .table-row {
@@ -608,6 +814,11 @@
   .odontogram .modal-content {
     margin: 10px;
     max-height: 95vh;
+  }
+
+  .odontogram .large-modal {
+    max-width: 95vw;
+    margin: 10px;
   }
 
   .odontogram .patient-header {
@@ -637,4 +848,134 @@
   .odontogram .modal-footer {
     flex-direction: column;
   }
+
+  .odontogram .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .odontogram .condition-legend {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .odontogram .summary-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .odontogram .tooth-condition-select {
+    min-width: 70px;
+    font-size: 0.7rem;
+  }
+}
+
+/* Note Suggestions */
+.odontogram .note-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.odontogram .suggestion-btn {
+  padding: 8px 12px;
+  background: #edf2f7;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.odontogram .suggestion-btn:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e0;
+  color: #2d3748;
+}
+
+.odontogram .suggestion-btn:active {
+  transform: translateY(1px);
+}
+
+/* Add Note Modal specific styles */
+.odontogram .form-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.odontogram .form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.odontogram .form-group input[type="date"],
+.odontogram .form-group input[type="time"] {
+  max-width: 200px;
+}
+
+/* User Notes Section */
+.odontogram .user-notes-section {
+  margin-top: 24px;
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.odontogram .user-notes-section h5 {
+  margin: 0 0 16px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a202c;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.odontogram .user-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.odontogram .user-note-item {
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border-left: 4px solid #3182ce;
+}
+
+.odontogram .note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.odontogram .note-header h6 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.odontogram .note-date {
+  font-size: 0.75rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+.odontogram .note-content {
+  margin: 0 0 8px 0;
+  color: #4a5568;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.odontogram .note-doctor {
+  font-size: 0.75rem;
+  color: #3182ce;
+  font-weight: 500;
+  font-style: italic;
 }

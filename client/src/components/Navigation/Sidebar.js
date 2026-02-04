@@ -6,6 +6,38 @@ const Sidebar = ({ currentView, onViewChange, user }) => {
   const { t } = useTranslation();
   const [showSettings, setShowSettings] = useState(false);
 
+  // Definir roles y permisos
+  const userRoles = {
+    'Director Médico': {
+      permissions: ['dashboard', 'patients', 'appointments', 'ai-analysis', 'xray-analysis', 'test-reports-analysis', 'odontogram', 'prospects', 'prescriptions', 'billing', 'lab-providers', 'users'],
+      isAdmin: true
+    },
+    'Doctor': {
+      permissions: ['dashboard', 'patients', 'appointments', 'ai-analysis', 'xray-analysis', 'test-reports-analysis', 'odontogram', 'prescriptions'],
+      isAdmin: false
+    },
+    'Enfermera': {
+      permissions: ['dashboard', 'patients', 'appointments', 'prescriptions'],
+      isAdmin: false
+    },
+    'Recepcionista': {
+      permissions: ['dashboard', 'patients', 'appointments', 'prospects', 'billing'],
+      isAdmin: false
+    },
+    'Técnico de Laboratorio': {
+      permissions: ['dashboard', 'ai-analysis', 'xray-analysis', 'test-reports-analysis', 'lab-providers'],
+      isAdmin: false
+    },
+    'Operador': {
+      permissions: ['dashboard', 'patients', 'appointments'],
+      isAdmin: false
+    }
+  };
+
+  // Obtener permisos del usuario actual
+  const currentUserRole = userRoles[user?.role] || userRoles['Operador'];
+  const hasPermission = (permission) => currentUserRole.permissions.includes(permission);
+
   const handleSettingsClick = () => {
     setShowSettings(!showSettings);
   };
@@ -147,7 +179,7 @@ const Sidebar = ({ currentView, onViewChange, user }) => {
 
         <div className="nav-section">
           <h4 className="nav-section-title">GESTIÓN DE PACIENTES</h4>
-          {menuItems.slice(1, 3).map((item) => (
+          {menuItems.slice(1, 3).filter(item => hasPermission(item.view)).map((item) => (
             <button
               key={item.id}
               className={`nav-item ${currentView === item.view ? 'active' : ''}`}
@@ -159,57 +191,82 @@ const Sidebar = ({ currentView, onViewChange, user }) => {
           ))}
         </div>
 
-        <div className="nav-section">
-          <h4 className="nav-section-title">ANÁLISIS CON IA</h4>
-          {menuItems[3].submenu.map((item) => (
-            <button
-              key={item.id}
-              className={`nav-item ${currentView === item.view ? 'active' : ''}`}
-              onClick={() => handleMenuClick(item.view)}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
-              <span className="ai-badge">AI</span>
-            </button>
-          ))}
-          
-          <button
-            className={`nav-item ${currentView === 'odontogram' ? 'active' : ''}`}
-            onClick={() => handleMenuClick('odontogram')}
-          >
-            <span className="nav-icon">🦷</span>
-            <span className="nav-label">{t('nav.odontogram')}</span>
-            <span className="dental-badge">Dental</span>
-          </button>
-        </div>
+        {hasPermission('ai-analysis') && (
+          <div className="nav-section">
+            <h4 className="nav-section-title">ANÁLISIS CON IA</h4>
+            {menuItems[3].submenu.filter(item => hasPermission(item.view)).map((item) => (
+              <button
+                key={item.id}
+                className={`nav-item ${currentView === item.view ? 'active' : ''}`}
+                onClick={() => handleMenuClick(item.view)}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                <span className="nav-label">{item.label}</span>
+                <span className="ai-badge">AI</span>
+              </button>
+            ))}
+          </div>
+        )}
 
-        <div className="nav-section">
-          <h4 className="nav-section-title">GESTIÓN FINANCIERA</h4>
-          {menuItems.slice(5, 8).map((item) => (
+        {hasPermission('odontogram') && (
+          <div className="nav-section">
+            <h4 className="nav-section-title">ANÁLISIS DENTAL</h4>
             <button
-              key={item.id}
-              className={`nav-item ${currentView === item.view ? 'active' : ''}`}
-              onClick={() => handleMenuClick(item.view)}
+              className={`nav-item ${currentView === 'odontogram' ? 'active' : ''}`}
+              onClick={() => handleMenuClick('odontogram')}
             >
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
+              <span className="nav-icon">🦷</span>
+              <span className="nav-label">{t('nav.odontogram')}</span>
+              <span className="dental-badge">Dental</span>
             </button>
-          ))}
-        </div>
+          </div>
+        )}
 
-        <div className="nav-section">
-          <h4 className="nav-section-title">OPERACIONES</h4>
-          {menuItems.slice(8).map((item) => (
+        {(hasPermission('prospects') || hasPermission('prescriptions') || hasPermission('billing')) && (
+          <div className="nav-section">
+            <h4 className="nav-section-title">GESTIÓN FINANCIERA</h4>
+            {menuItems.slice(5, 8).filter(item => hasPermission(item.view)).map((item) => (
+              <button
+                key={item.id}
+                className={`nav-item ${currentView === item.view ? 'active' : ''}`}
+                onClick={() => handleMenuClick(item.view)}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                <span className="nav-label">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {hasPermission('lab-providers') && (
+          <div className="nav-section">
+            <h4 className="nav-section-title">OPERACIONES</h4>
+            {menuItems.slice(8).filter(item => hasPermission(item.view)).map((item) => (
+              <button
+                key={item.id}
+                className={`nav-item ${currentView === item.view ? 'active' : ''}`}
+                onClick={() => handleMenuClick(item.view)}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                <span className="nav-label">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {currentUserRole.isAdmin && (
+          <div className="nav-section">
+            <h4 className="nav-section-title">ADMINISTRACIÓN</h4>
             <button
-              key={item.id}
-              className={`nav-item ${currentView === item.view ? 'active' : ''}`}
-              onClick={() => handleMenuClick(item.view)}
+              className={`nav-item ${currentView === 'users' ? 'active' : ''}`}
+              onClick={() => handleMenuClick('users')}
             >
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
+              <span className="nav-icon">👥</span>
+              <span className="nav-label">Gestión de Usuarios</span>
+              <span className="ai-badge">Admin</span>
             </button>
-          ))}
-        </div>
+          </div>
+        )}
       </nav>
 
       <div className="sidebar-footer">

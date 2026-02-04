@@ -11,6 +11,7 @@ import Prospects from './components/Prospects/Prospects';
 import Prescriptions from './components/Prescriptions/Prescriptions';
 import Patients from './components/Patients/Patients';
 import Billing from './components/Billing/Billing';
+import Users from './components/Users/Users';
 import './App.css';
 
 function App() {
@@ -42,6 +43,8 @@ function App() {
         return <Patients />;
       case 'billing':
         return <Billing />;
+      case 'users':
+        return <Users />;
       default:
         return <Dashboard />;
     }

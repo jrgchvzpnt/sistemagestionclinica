@@ -22,6 +22,15 @@ const Odontogram = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [showAddNoteModal, setShowAddNoteModal] = useState(false);
+  const [newNote, setNewNote] = useState({
+    date: new Date().toISOString().split('T')[0],
+    time: new Date().toTimeString().split(' ')[0].slice(0, 5),
+    title: '',
+    content: '',
+    doctor: 'Dr. María González'
+  });
+  const [patientNotes, setPatientNotes] = useState({});
 
   useEffect(() => {
     fetchOdontograms();
@@ -160,9 +169,141 @@ const Odontogram = () => {
     alert('Estadísticas actualizadas');
   };
 
+  const handleAddNote = () => {
+    setShowHistoryModal(false);
+    setShowAddNoteModal(true);
+  };
+
+  const handleSaveNote = () => {
+    if (!newNote.title || !newNote.content) {
+      alert('Por favor complete el título y contenido de la nota');
+      return;
+    }
+
+    const noteWithId = {
+      ...newNote,
+      id: Date.now(),
+      timestamp: new Date().toISOString()
+    };
+
+    // Add note to patient's notes
+    setPatientNotes(prev => ({
+      ...prev,
+      [selectedRecord._id]: [
+        ...(prev[selectedRecord._id] || []),
+        noteWithId
+      ]
+    }));
+
+    // Reset form
+    setNewNote({
+      date: new Date().toISOString().split('T')[0],
+      time: new Date().toTimeString().split(' ')[0].slice(0, 5),
+      title: '',
+      content: '',
+      doctor: 'Dr. María González'
+    });
+
+    setShowAddNoteModal(false);
+    setShowHistoryModal(true);
+    alert('Nota agregada exitosamente al historial del paciente');
+  };
+
+  const [showNewOdontogramModal, setShowNewOdontogramModal] = useState(false);
+  const [newOdontogramData, setNewOdontogramData] = useState({
+    patientId: '',
+    patientName: '',
+    doctorId: '',
+    doctorName: '',
+    examDate: new Date().toISOString().split('T')[0],
+    notes: '',
+    teethConditions: {}
+  });
+
   const handleNewOdontogram = () => {
-    // TODO: Implement new odontogram functionality
-    alert('Crear nuevo odontograma - Funcionalidad próximamente');
+    setShowNewOdontogramModal(true);
+  };
+
+  const handleCreateOdontogram = () => {
+    // Create new odontogram record
+    const newRecord = {
+      _id: Date.now().toString(),
+      patient: {
+        firstName: newOdontogramData.patientName.split(' ')[0] || 'Nuevo',
+        lastName: newOdontogramData.patientName.split(' ').slice(1).join(' ') || 'Paciente',
+        age: Math.floor(Math.random() * 50) + 20
+      },
+      doctor: {
+        firstName: newOdontogramData.doctorName.split(' ')[0] || 'Dr.',
+        lastName: newOdontogramData.doctorName.split(' ').slice(1).join(' ') || 'Doctor'
+      },
+      examDate: new Date(newOdontogramData.examDate).toISOString(),
+      version: 'v1',
+      status: 'Active',
+      progress: 0,
+      treatments: Object.values(newOdontogramData.teethConditions).filter(c => c !== 'healthy').length,
+      teethAffected: Object.keys(newOdontogramData.teethConditions).filter(tooth => 
+        newOdontogramData.teethConditions[tooth] !== 'healthy'
+      ).map(Number),
+      notes: newOdontogramData.notes,
+      teethConditions: newOdontogramData.teethConditions
+    };
+
+    // Add to existing records
+    setOdontograms(prev => [newRecord, ...prev]);
+    
+    console.log('Creating new odontogram:', newOdontogramData);
+    alert('Nuevo odontograma creado exitosamente y agregado a los registros dentales');
+    setShowNewOdontogramModal(false);
+    setNewOdontogramData({
+      patientId: '',
+      patientName: '',
+      doctorId: '',
+      doctorName: '',
+      examDate: new Date().toISOString().split('T')[0],
+      notes: '',
+      teethConditions: {}
+    });
+  };
+
+  const handleToothClick = (toothNumber, condition) => {
+    setNewOdontogramData(prev => ({
+      ...prev,
+      teethConditions: {
+        ...prev.teethConditions,
+        [toothNumber]: condition
+      }
+    }));
+  };
+
+  const getToothConditionClass = (toothNumber) => {
+    const condition = newOdontogramData.teethConditions[toothNumber];
+    if (!condition) return '';
+    
+    switch (condition) {
+      case 'healthy': return 'tooth-healthy';
+      case 'cavity': return 'tooth-cavity';
+      case 'filling': return 'tooth-filling';
+      case 'crown': return 'tooth-crown';
+      case 'missing': return 'tooth-missing';
+      case 'root-canal': return 'tooth-root-canal';
+      default: return '';
+    }
+  };
+
+  const getToothIcon = (toothNumber) => {
+    const condition = newOdontogramData.teethConditions[toothNumber];
+    if (!condition) return '🦷';
+    
+    switch (condition) {
+      case 'healthy': return '🦷';
+      case 'cavity': return '🔴';
+      case 'filling': return '⚪';
+      case 'crown': return '👑';
+      case 'missing': return '❌';
+      case 'root-canal': return '🔧';
+      default: return '🦷';
+    }
   };
 
   return (
@@ -302,7 +443,20 @@ const Odontogram = () => {
           </div>
 
           <div className="table-body">
-            {(odontograms.length > 0 ? odontograms : mockOdontograms).map((record) => (
+            {(odontograms.length > 0 ? odontograms : mockOdontograms)
+              .filter(record => {
+                const searchTerm = filters.search.toLowerCase();
+                const patientName = `${record.patient.firstName} ${record.patient.lastName}`.toLowerCase();
+                const doctorName = `${record.doctor.firstName} ${record.doctor.lastName}`.toLowerCase();
+                return patientName.includes(searchTerm) || doctorName.includes(searchTerm);
+              })
+              .filter(record => {
+                if (filters.activeOnly) {
+                  return record.status.toLowerCase() === 'active';
+                }
+                return true;
+              })
+              .map((record) => (
               <div key={record._id} className="table-row">
                 <div className="col-patient">
                   <div className="patient-info">
@@ -519,11 +673,363 @@ const Odontogram = () => {
                   <p>• Se recomienda control cada 6 meses</p>
                   <p>• Progreso actual: {selectedRecord.progress}%</p>
                 </div>
+                
+                {/* User Added Notes */}
+                {patientNotes[selectedRecord._id] && patientNotes[selectedRecord._id].length > 0 && (
+                  <div className="user-notes-section">
+                    <h5>📋 Notas Adicionales</h5>
+                    <div className="user-notes-list">
+                      {patientNotes[selectedRecord._id].map((note) => (
+                        <div key={note.id} className="user-note-item">
+                          <div className="note-header">
+                            <h6>{note.title}</h6>
+                            <span className="note-date">{note.date} - {note.time}</span>
+                          </div>
+                          <p className="note-content">{note.content}</p>
+                          <span className="note-doctor">Por: {note.doctor}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="modal-footer">
               <button className="btn-secondary" onClick={() => setShowHistoryModal(false)}>Cerrar</button>
-              <button className="btn-primary">Agregar Nota</button>
+              <button className="btn-primary" onClick={handleAddNote}>Agregar Nota</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Odontogram Modal */}
+      {showNewOdontogramModal && (
+        <div className="modal-overlay" onClick={() => setShowNewOdontogramModal(false)}>
+          <div className="modal-content large-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>🦷 Crear Nuevo Odontograma</h2>
+              <button className="modal-close" onClick={() => setShowNewOdontogramModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              {/* Patient and Doctor Information */}
+              <div className="form-section">
+                <h4>📋 Información del Paciente y Doctor</h4>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Nombre del Paciente</label>
+                    <input
+                      type="text"
+                      value={newOdontogramData.patientName}
+                      onChange={(e) => setNewOdontogramData({...newOdontogramData, patientName: e.target.value})}
+                      placeholder="Ej: Juan Pérez"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Doctor Asignado</label>
+                    <select
+                      value={newOdontogramData.doctorName}
+                      onChange={(e) => setNewOdontogramData({...newOdontogramData, doctorName: e.target.value})}
+                    >
+                      <option value="">Seleccionar Doctor</option>
+                      <option value="Dr. Lura Weimann">Dr. Lura Weimann</option>
+                      <option value="Dr. Deshawn Barton">Dr. Deshawn Barton</option>
+                      <option value="Dr. Pierce O'Conner">Dr. Pierce O'Conner</option>
+                      <option value="Dr. María González">Dr. María González</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Fecha de Examen</label>
+                    <input
+                      type="date"
+                      value={newOdontogramData.examDate}
+                      onChange={(e) => setNewOdontogramData({...newOdontogramData, examDate: e.target.value})}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Dental Chart */}
+              <div className="form-section">
+                <h4>🦷 Mapa Dental Interactivo</h4>
+                <p className="instruction-text">Haga clic en cada diente para marcar su condición:</p>
+                
+                {/* Condition Legend */}
+                <div className="condition-legend">
+                  <div className="legend-item">
+                    <span className="legend-icon tooth-healthy">🦷</span>
+                    <span>Sano</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-icon tooth-cavity">🔴</span>
+                    <span>Caries</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-icon tooth-filling">⚪</span>
+                    <span>Empaste</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-icon tooth-crown">👑</span>
+                    <span>Corona</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-icon tooth-missing">❌</span>
+                    <span>Faltante</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-icon tooth-root-canal">🔧</span>
+                    <span>Endodoncia</span>
+                  </div>
+                </div>
+
+                <div className="interactive-teeth-grid">
+                  {/* Upper jaw */}
+                  <div className="jaw-section upper">
+                    <h5>Maxilar Superior</h5>
+                    <div className="teeth-row">
+                      {[18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28].map(tooth => (
+                        <div key={tooth} className="tooth-selector">
+                          <span className="tooth-number">{tooth}</span>
+                          <div 
+                            className={`tooth interactive ${getToothConditionClass(tooth)}`}
+                            onClick={() => {
+                              const conditions = ['healthy', 'cavity', 'filling', 'crown', 'missing', 'root-canal'];
+                              const currentCondition = newOdontogramData.teethConditions[tooth];
+                              const currentIndex = conditions.indexOf(currentCondition);
+                              const nextCondition = conditions[(currentIndex + 1) % conditions.length];
+                              handleToothClick(tooth, nextCondition);
+                            }}
+                          >
+                            <div className="tooth-icon">{getToothIcon(tooth)}</div>
+                          </div>
+                          <select
+                            value={newOdontogramData.teethConditions[tooth] || 'healthy'}
+                            onChange={(e) => handleToothClick(tooth, e.target.value)}
+                            className="tooth-condition-select"
+                          >
+                            <option value="healthy">Sano</option>
+                            <option value="cavity">Caries</option>
+                            <option value="filling">Empaste</option>
+                            <option value="crown">Corona</option>
+                            <option value="missing">Faltante</option>
+                            <option value="root-canal">Endodoncia</option>
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Lower jaw */}
+                  <div className="jaw-section lower">
+                    <h5>Maxilar Inferior</h5>
+                    <div className="teeth-row">
+                      {[48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38].map(tooth => (
+                        <div key={tooth} className="tooth-selector">
+                          <span className="tooth-number">{tooth}</span>
+                          <div 
+                            className={`tooth interactive ${getToothConditionClass(tooth)}`}
+                            onClick={() => {
+                              const conditions = ['healthy', 'cavity', 'filling', 'crown', 'missing', 'root-canal'];
+                              const currentCondition = newOdontogramData.teethConditions[tooth];
+                              const currentIndex = conditions.indexOf(currentCondition);
+                              const nextCondition = conditions[(currentIndex + 1) % conditions.length];
+                              handleToothClick(tooth, nextCondition);
+                            }}
+                          >
+                            <div className="tooth-icon">{getToothIcon(tooth)}</div>
+                          </div>
+                          <select
+                            value={newOdontogramData.teethConditions[tooth] || 'healthy'}
+                            onChange={(e) => handleToothClick(tooth, e.target.value)}
+                            className="tooth-condition-select"
+                          >
+                            <option value="healthy">Sano</option>
+                            <option value="cavity">Caries</option>
+                            <option value="filling">Empaste</option>
+                            <option value="crown">Corona</option>
+                            <option value="missing">Faltante</option>
+                            <option value="root-canal">Endodoncia</option>
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Treatment Notes */}
+              <div className="form-section">
+                <h4>📝 Notas del Tratamiento</h4>
+                <div className="form-group">
+                  <label>Observaciones y Plan de Tratamiento</label>
+                  <textarea
+                    value={newOdontogramData.notes}
+                    onChange={(e) => setNewOdontogramData({...newOdontogramData, notes: e.target.value})}
+                    placeholder="Escriba aquí las observaciones del examen, diagnóstico y plan de tratamiento..."
+                    rows="4"
+                  />
+                </div>
+              </div>
+
+              {/* Summary */}
+              <div className="form-section">
+                <h4>📊 Resumen del Odontograma</h4>
+                <div className="summary-stats">
+                  <div className="summary-stat">
+                    <span className="stat-label">Dientes Sanos:</span>
+                    <span className="stat-value">
+                      {Object.values(newOdontogramData.teethConditions).filter(c => c === 'healthy').length}
+                    </span>
+                  </div>
+                  <div className="summary-stat">
+                    <span className="stat-label">Caries Detectadas:</span>
+                    <span className="stat-value">
+                      {Object.values(newOdontogramData.teethConditions).filter(c => c === 'cavity').length}
+                    </span>
+                  </div>
+                  <div className="summary-stat">
+                    <span className="stat-label">Tratamientos Previos:</span>
+                    <span className="stat-value">
+                      {Object.values(newOdontogramData.teethConditions).filter(c => ['filling', 'crown', 'root-canal'].includes(c)).length}
+                    </span>
+                  </div>
+                  <div className="summary-stat">
+                    <span className="stat-label">Dientes Faltantes:</span>
+                    <span className="stat-value">
+                      {Object.values(newOdontogramData.teethConditions).filter(c => c === 'missing').length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowNewOdontogramModal(false)}>
+                Cancelar
+              </button>
+              <button 
+                className="btn-primary" 
+                onClick={handleCreateOdontogram}
+                disabled={!newOdontogramData.patientName || !newOdontogramData.doctorName}
+              >
+                Crear Odontograma
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Note Modal */}
+      {showAddNoteModal && selectedRecord && (
+        <div className="modal-overlay" onClick={() => setShowAddNoteModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📝 Agregar Nueva Nota</h2>
+              <button className="modal-close" onClick={() => setShowAddNoteModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="patient-header">
+                <div className="patient-avatar-large">👤</div>
+                <div className="patient-details">
+                  <h3>{selectedRecord.patient.firstName} {selectedRecord.patient.lastName}</h3>
+                  <p>Edad: {selectedRecord.patient.age} años</p>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h4>📋 Información de la Nota</h4>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Fecha</label>
+                    <input
+                      type="date"
+                      value={newNote.date}
+                      onChange={(e) => setNewNote({...newNote, date: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Hora</label>
+                    <input
+                      type="time"
+                      value={newNote.time}
+                      onChange={(e) => setNewNote({...newNote, time: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Doctor</label>
+                    <select
+                      value={newNote.doctor}
+                      onChange={(e) => setNewNote({...newNote, doctor: e.target.value})}
+                    >
+                      <option value="Dr. María González">Dr. María González</option>
+                      <option value="Dr. Lura Weimann">Dr. Lura Weimann</option>
+                      <option value="Dr. Deshawn Barton">Dr. Deshawn Barton</option>
+                      <option value="Dr. Pierce O'Conner">Dr. Pierce O'Conner</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <div className="form-group">
+                  <label>Título de la Nota</label>
+                  <input
+                    type="text"
+                    value={newNote.title}
+                    onChange={(e) => setNewNote({...newNote, title: e.target.value})}
+                    placeholder="Ej: Control post-operatorio, Seguimiento de tratamiento, etc."
+                  />
+                </div>
+              </div>
+
+              <div className="form-section">
+                <div className="form-group">
+                  <label>Contenido de la Nota</label>
+                  <textarea
+                    value={newNote.content}
+                    onChange={(e) => setNewNote({...newNote, content: e.target.value})}
+                    placeholder="Escriba aquí los detalles del tratamiento, observaciones, recomendaciones, etc."
+                    rows="6"
+                  />
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h4>💡 Sugerencias de Notas</h4>
+                <div className="note-suggestions">
+                  <button 
+                    type="button" 
+                    className="suggestion-btn"
+                    onClick={() => setNewNote({...newNote, title: 'Control de rutina', content: 'Paciente presenta buena evolución. Sin complicaciones. Se recomienda continuar con el plan de tratamiento establecido.'})}
+                  >
+                    Control de rutina
+                  </button>
+                  <button 
+                    type="button" 
+                    className="suggestion-btn"
+                    onClick={() => setNewNote({...newNote, title: 'Seguimiento post-tratamiento', content: 'Revisión post-operatoria. Cicatrización adecuada. Paciente sin dolor ni molestias. Próxima cita en 2 semanas.'})}
+                  >
+                    Seguimiento post-tratamiento
+                  </button>
+                  <button 
+                    type="button" 
+                    className="suggestion-btn"
+                    onClick={() => setNewNote({...newNote, title: 'Recomendaciones de higiene', content: 'Se proporcionaron instrucciones de higiene oral. Recomendado uso de hilo dental diario y enjuague bucal. Control en 6 meses.'})}
+                  >
+                    Recomendaciones de higiene
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowAddNoteModal(false)}>
+                Cancelar
+              </button>
+              <button 
+                className="btn-primary" 
+                onClick={handleSaveNote}
+                disabled={!newNote.title || !newNote.content}
+              >
+                Guardar Nota
+              </button>
             </div>
           </div>
         </div>
