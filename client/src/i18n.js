@@ -56,6 +56,7 @@ const resources = {
       'nav.odontogram': 'Odontograma',
       'nav.prospects': 'Prospectos y CRM',
       'nav.prescriptions': 'Recetas',
+      'nav.billing': 'Facturación',
       'nav.lab_providers': 'Proveedores de Laboratorio',
       'nav.reports': 'Reportes',
       'nav.settings': 'Configuración',

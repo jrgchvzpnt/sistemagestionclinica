@@ -135,9 +135,54 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Default admin user for demo
+  const DEFAULT_ADMIN = {
+    id: 'admin-001',
+    email: 'admin@insightdental.com',
+    password: 'admin123',
+    firstName: 'María',
+    lastName: 'González',
+    role: 'admin',
+    position: 'Director Médico',
+    permissions: [
+      { module: 'dashboard', actions: ['read', 'write'] },
+      { module: 'patients', actions: ['read', 'write', 'delete'] },
+      { module: 'appointments', actions: ['read', 'write', 'delete'] },
+      { module: 'users', actions: ['read', 'write', 'delete'] },
+      { module: 'billing', actions: ['read', 'write'] },
+      { module: 'reports', actions: ['read', 'write'] },
+      { module: 'settings', actions: ['read', 'write'] }
+    ]
+  };
+
   // Login function
   const login = async (email, password) => {
     dispatch({ type: AUTH_ACTIONS.LOGIN_START });
+
+    // Check for default admin credentials first
+    if (email === DEFAULT_ADMIN.email && password === DEFAULT_ADMIN.password) {
+      const mockToken = 'demo-admin-token-' + Date.now();
+      const userData = {
+        user: {
+          id: DEFAULT_ADMIN.id,
+          email: DEFAULT_ADMIN.email,
+          firstName: DEFAULT_ADMIN.firstName,
+          lastName: DEFAULT_ADMIN.lastName,
+          role: DEFAULT_ADMIN.role,
+          position: DEFAULT_ADMIN.position,
+          permissions: DEFAULT_ADMIN.permissions
+        },
+        token: mockToken
+      };
+
+      dispatch({
+        type: AUTH_ACTIONS.LOGIN_SUCCESS,
+        payload: userData,
+      });
+
+      // toast.success('¡Inicio de sesión exitoso!');
+      return { success: true };
+    }
 
     try {
       const response = await axios.post('/api/auth/login', {
@@ -150,18 +195,18 @@ export const AuthProvider = ({ children }) => {
         payload: response.data,
       });
 
-      toast.success('¡Inicio de sesión exitoso!');
+      // toast.success('¡Inicio de sesión exitoso!');
       return { success: true };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Error en el inicio de sesión';
+      const errorMessage = error.response?.data?.message || 'Credenciales incorrectas';
       
       dispatch({
         type: AUTH_ACTIONS.LOGIN_FAILURE,
         payload: errorMessage,
       });
 
-      toast.error(errorMessage);
-      return { success: false, error: errorMessage };
+      // toast.error(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 

@@ -1,8 +1,8 @@
 /* Dashboard Styles */
 .dashboard {
-  padding: 24px;
-  background-color: #f8fafc;
-  min-height: 100vh;
+  padding: 0;
+  background-color: transparent;
+  min-height: calc(100vh - 48px);
 }
 
 .dashboard-header {

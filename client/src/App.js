@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { AuthProvider } from './contexts/AuthContext';
+import React from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Sidebar from './components/Navigation/Sidebar';
 import Dashboard from './components/Dashboard/Dashboard';
 import LabProviders from './components/LabProviders/LabProviders';
@@ -12,14 +12,13 @@ import Prescriptions from './components/Prescriptions/Prescriptions';
 import Patients from './components/Patients/Patients';
 import Billing from './components/Billing/Billing';
 import Users from './components/Users/Users';
+import Login from './components/Auth/Login';
 import './App.css';
 
-function App() {
-  const [currentView, setCurrentView] = useState('dashboard');
-  const [user] = useState({
-    name: 'Dr. María González',
-    role: 'Director Médico'
-  });
+// Component that handles the authenticated app
+const AuthenticatedApp = () => {
+  const [currentView, setCurrentView] = React.useState('dashboard');
+  const { user } = useAuth();
 
   const renderCurrentView = () => {
     switch (currentView) {
@@ -51,17 +50,47 @@ function App() {
   };
 
   return (
-    <AuthProvider>
-      <div className="app">
-        <Sidebar 
-          currentView={currentView} 
-          onViewChange={setCurrentView}
-          user={user}
-        />
-        <main className="main-content">
-          {renderCurrentView()}
-        </main>
+    <div className="app">
+      <Sidebar 
+        currentView={currentView} 
+        onViewChange={setCurrentView}
+        user={user}
+      />
+      <main className="main-content">
+        {renderCurrentView()}
+      </main>
+    </div>
+  );
+};
+
+// Main App component that handles authentication state
+const AppContent = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="app-loading">
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <p>Cargando InsightDental...</p>
+        </div>
       </div>
+    );
+  }
+
+  // If user is not authenticated, show login
+  if (!user) {
+    return <Login />;
+  }
+
+  // If user is authenticated, show the main app
+  return <AuthenticatedApp />;
+};
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
     </AuthProvider>
   );
 }

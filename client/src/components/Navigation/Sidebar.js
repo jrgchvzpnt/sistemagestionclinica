@@ -1,41 +1,49 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../contexts/AuthContext';
 import './Sidebar.css';
 
 const Sidebar = ({ currentView, onViewChange, user }) => {
   const { t } = useTranslation();
+  const { logout } = useAuth();
   const [showSettings, setShowSettings] = useState(false);
 
   // Definir roles y permisos
   const userRoles = {
-    'Director Médico': {
+    'admin': {
       permissions: ['dashboard', 'patients', 'appointments', 'ai-analysis', 'xray-analysis', 'test-reports-analysis', 'odontogram', 'prospects', 'prescriptions', 'billing', 'lab-providers', 'users'],
-      isAdmin: true
+      isAdmin: true,
+      displayName: 'Administrador'
     },
-    'Doctor': {
+    'doctor': {
       permissions: ['dashboard', 'patients', 'appointments', 'ai-analysis', 'xray-analysis', 'test-reports-analysis', 'odontogram', 'prescriptions'],
-      isAdmin: false
+      isAdmin: false,
+      displayName: 'Doctor'
     },
-    'Enfermera': {
+    'nurse': {
       permissions: ['dashboard', 'patients', 'appointments', 'prescriptions'],
-      isAdmin: false
+      isAdmin: false,
+      displayName: 'Enfermera'
     },
-    'Recepcionista': {
+    'receptionist': {
       permissions: ['dashboard', 'patients', 'appointments', 'prospects', 'billing'],
-      isAdmin: false
+      isAdmin: false,
+      displayName: 'Recepcionista'
     },
-    'Técnico de Laboratorio': {
+    'technician': {
       permissions: ['dashboard', 'ai-analysis', 'xray-analysis', 'test-reports-analysis', 'lab-providers'],
-      isAdmin: false
+      isAdmin: false,
+      displayName: 'Técnico de Laboratorio'
     },
-    'Operador': {
+    'operator': {
       permissions: ['dashboard', 'patients', 'appointments'],
-      isAdmin: false
+      isAdmin: false,
+      displayName: 'Operador'
     }
   };
 
   // Obtener permisos del usuario actual
-  const currentUserRole = userRoles[user?.role] || userRoles['Operador'];
+  const currentUserRole = userRoles[user?.role] || userRoles['operator'];
   const hasPermission = (permission) => currentUserRole.permissions.includes(permission);
 
   const handleSettingsClick = () => {
@@ -47,12 +55,13 @@ const Sidebar = ({ currentView, onViewChange, user }) => {
     alert('Funcionalidad de cambio de idioma próximamente');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (window.confirm('¿Está seguro de que desea cerrar sesión?')) {
-      // TODO: Implement logout functionality
-      localStorage.removeItem('token');
-      alert('Sesión cerrada');
-      // Redirect to login page
+      try {
+        await logout();
+      } catch (error) {
+        console.error('Error during logout:', error);
+      }
     }
   };
 
@@ -153,11 +162,17 @@ const Sidebar = ({ currentView, onViewChange, user }) => {
         
         <div className="user-info">
           <div className="user-avatar">
-            {user?.name?.charAt(0) || 'DM'}
+            {user?.firstName?.charAt(0) || user?.name?.charAt(0) || 'MG'}
           </div>
           <div className="user-details">
-            <span className="user-name">{user?.name || 'Dr. María González'}</span>
-            <span className="user-role">{user?.role || 'Director Médico'}</span>
+            <span className="user-name">
+              {user?.firstName && user?.lastName 
+                ? `${user.firstName} ${user.lastName}` 
+                : user?.name || 'Dr. María González'}
+            </span>
+            <span className="user-role">
+              {currentUserRole.displayName || user?.position || 'Administrador'}
+            </span>
           </div>
         </div>
       </div>
