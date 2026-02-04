@@ -16,8 +16,8 @@ import './App.css';
 function App() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [user] = useState({
-    name: 'Queen Bayer',
-    role: 'Admin'
+    name: 'Dr. María González',
+    role: 'Director Médico'
   });
 
   const renderCurrentView = () => {

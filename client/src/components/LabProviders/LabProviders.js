@@ -16,6 +16,16 @@ const LabProviders = () => {
     status: 'all',
     specialty: 'all'
   });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newProvider, setNewProvider] = useState({
+    name: '',
+    code: '',
+    contactPerson: '',
+    email: '',
+    phone: '',
+    specialties: [],
+    status: 'pending'
+  });
 
   useEffect(() => {
     fetchProviders();
@@ -55,18 +65,90 @@ const LabProviders = () => {
     }
   };
 
+  const handleAddProvider = () => {
+    setShowAddModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setNewProvider({
+      name: '',
+      code: '',
+      contactPerson: '',
+      email: '',
+      phone: '',
+      specialties: [],
+      status: 'pending'
+    });
+  };
+
+  const handleSaveProvider = async () => {
+    try {
+      // Validate required fields
+      if (!newProvider.name || !newProvider.email || !newProvider.contactPerson) {
+        alert('Por favor complete todos los campos requeridos');
+        return;
+      }
+
+      // TODO: Replace with actual API call
+      const response = await fetch('/api/lab-providers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(newProvider)
+      });
+
+      if (response.ok) {
+        alert('Proveedor agregado exitosamente');
+        handleCloseModal();
+        fetchProviders(); // Refresh the list
+      } else {
+        throw new Error('Error al agregar proveedor');
+      }
+    } catch (error) {
+      console.error('Error saving provider:', error);
+      // For demo purposes, add to mock data
+      const mockNewProvider = {
+        _id: Date.now().toString(),
+        ...newProvider,
+        rating: 0,
+        performance: { totalTests: 0 },
+        lastTest: 'Nuevo'
+      };
+      
+      alert('Proveedor agregado exitosamente (modo demo)');
+      handleCloseModal();
+    }
+  };
+
+  const handleUpdateProvider = (providerId) => {
+    alert(`Actualizar proveedor ${providerId} - Funcionalidad próximamente`);
+  };
+
+  const handleDeleteProvider = (providerId) => {
+    if (window.confirm('¿Está seguro de que desea eliminar este proveedor?')) {
+      alert(`Proveedor ${providerId} eliminado - Funcionalidad próximamente`);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const statusMap = {
-      active: { text: 'Activo', class: 'status-active' },
-      inactive: { text: 'Inactivo', class: 'status-inactive' },
-      pending: { text: 'Pendiente', class: 'status-pending' },
-      budget: { text: 'Budget', class: 'status-budget' },
-      premium: { text: 'Premium', class: 'status-premium' },
-      moderate: { text: 'Moderate', class: 'status-moderate' }
+      active: { text: 'Activo', class: 'status-active', icon: '✅' },
+      inactive: { text: 'Inactivo', class: 'status-inactive', icon: '❌' },
+      pending: { text: 'Pendiente', class: 'status-pending', icon: '⏳' },
+      budget: { text: 'Budget', class: 'status-budget', icon: '💰' },
+      premium: { text: 'Premium', class: 'status-premium', icon: '⭐' },
+      moderate: { text: 'Moderate', class: 'status-moderate', icon: '📊' }
     };
     
-    const statusInfo = statusMap[status] || { text: status, class: 'status-default' };
-    return <span className={`status-badge ${statusInfo.class}`}>{statusInfo.text}</span>;
+    const statusInfo = statusMap[status] || { text: status, class: 'status-default', icon: '📋' };
+    return (
+      <span className={`status-badge ${statusInfo.class}`}>
+        {statusInfo.icon} {statusInfo.text}
+      </span>
+    );
   };
 
   const mockProviders = [
@@ -119,8 +201,14 @@ const LabProviders = () => {
           <p>{t('labProviders.subtitle')}</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary">{t('labProviders.update')}</button>
-          <button className="btn-primary">{t('labProviders.addProvider')}</button>
+          <button className="btn-secondary" onClick={() => fetchProviders()}>
+            <span>🔄</span>
+            Actualizar
+          </button>
+          <button className="btn-primary" onClick={handleAddProvider}>
+            <span>➕</span>
+            Agregar Proveedor
+          </button>
         </div>
       </div>
 
@@ -263,13 +351,143 @@ const LabProviders = () => {
                 </div>
 
                 <div className="col-actions">
-                  <button className="btn-action">{t('labProviders.actions')}</button>
+                  <div className="action-buttons">
+                    <button 
+                      className="btn-action edit"
+                      onClick={() => handleUpdateProvider(provider._id)}
+                      title="Editar proveedor"
+                    >
+                      ✏️
+                    </button>
+                    <button 
+                      className="btn-action delete"
+                      onClick={() => handleDeleteProvider(provider._id)}
+                      title="Eliminar proveedor"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      {/* Add Provider Modal */}
+      {showAddModal && (
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Agregar Nuevo Proveedor</h2>
+              <button className="modal-close" onClick={handleCloseModal}>✕</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Nombre del Laboratorio *</label>
+                  <input
+                    type="text"
+                    value={newProvider.name}
+                    onChange={(e) => setNewProvider({...newProvider, name: e.target.value})}
+                    placeholder="Ej: Laboratorio Central"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Código del Laboratorio</label>
+                  <input
+                    type="text"
+                    value={newProvider.code}
+                    onChange={(e) => setNewProvider({...newProvider, code: e.target.value})}
+                    placeholder="Ej: LAB001"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Persona de Contacto *</label>
+                  <input
+                    type="text"
+                    value={newProvider.contactPerson}
+                    onChange={(e) => setNewProvider({...newProvider, contactPerson: e.target.value})}
+                    placeholder="Ej: Dr. Juan Pérez"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Email *</label>
+                  <input
+                    type="email"
+                    value={newProvider.email}
+                    onChange={(e) => setNewProvider({...newProvider, email: e.target.value})}
+                    placeholder="contacto@laboratorio.com"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Teléfono</label>
+                  <input
+                    type="tel"
+                    value={newProvider.phone}
+                    onChange={(e) => setNewProvider({...newProvider, phone: e.target.value})}
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Estado</label>
+                  <select
+                    value={newProvider.status}
+                    onChange={(e) => setNewProvider({...newProvider, status: e.target.value})}
+                  >
+                    <option value="pending">Pendiente</option>
+                    <option value="active">Activo</option>
+                    <option value="inactive">Inactivo</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="form-group full-width">
+                <label>Especialidades</label>
+                <div className="specialties-checkboxes">
+                  {['Chemistry', 'Pathology', 'Molecular', 'Microbiology', 'Hematology'].map(specialty => (
+                    <label key={specialty} className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={newProvider.specialties.includes(specialty)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNewProvider({
+                              ...newProvider,
+                              specialties: [...newProvider.specialties, specialty]
+                            });
+                          } else {
+                            setNewProvider({
+                              ...newProvider,
+                              specialties: newProvider.specialties.filter(s => s !== specialty)
+                            });
+                          }
+                        }}
+                      />
+                      {specialty}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={handleCloseModal}>
+                Cancelar
+              </button>
+              <button className="btn-primary" onClick={handleSaveProvider}>
+                Guardar Proveedor
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

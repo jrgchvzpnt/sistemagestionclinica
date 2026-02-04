@@ -1,9 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import './Sidebar.css';
 
 const Sidebar = ({ currentView, onViewChange, user }) => {
   const { t } = useTranslation();
+  const [showSettings, setShowSettings] = useState(false);
+
+  const handleSettingsClick = () => {
+    setShowSettings(!showSettings);
+  };
+
+  const handleLanguageChange = () => {
+    // TODO: Implement language switching functionality
+    alert('Funcionalidad de cambio de idioma próximamente');
+  };
+
+  const handleLogout = () => {
+    if (window.confirm('¿Está seguro de que desea cerrar sesión?')) {
+      // TODO: Implement logout functionality
+      localStorage.removeItem('token');
+      alert('Sesión cerrada');
+      // Redirect to login page
+    }
+  };
+
+  const handleProfileSettings = () => {
+    // TODO: Implement profile settings modal
+    alert('Configuración de perfil próximamente');
+  };
+
+  const handleSystemSettings = () => {
+    // TODO: Implement system settings
+    alert('Configuración del sistema próximamente');
+  };
 
   const menuItems = [
     {
@@ -83,20 +112,20 @@ const Sidebar = ({ currentView, onViewChange, user }) => {
     <div className="sidebar">
       <div className="sidebar-header">
         <div className="clinic-logo">
-          <span className="logo-icon">🏥</span>
+          <span className="logo-icon">🦷</span>
           <div className="clinic-info">
-            <h3>Heavycoders</h3>
-            <p>clinic</p>
+            <h3>InsightDental</h3>
+            <p>Diagnósticos precisos, administración inteligente.</p>
           </div>
         </div>
         
         <div className="user-info">
           <div className="user-avatar">
-            {user?.name?.charAt(0) || 'QB'}
+            {user?.name?.charAt(0) || 'DM'}
           </div>
           <div className="user-details">
-            <span className="user-name">{user?.name || 'Queen Bayer'}</span>
-            <span className="user-role">{user?.role || 'Admin'}</span>
+            <span className="user-name">{user?.name || 'Dr. María González'}</span>
+            <span className="user-role">{user?.role || 'Director Médico'}</span>
           </div>
         </div>
       </div>
@@ -190,10 +219,35 @@ const Sidebar = ({ currentView, onViewChange, user }) => {
           <span className="currency">$ USD</span>
         </div>
         
-        <button className="settings-btn">
-          <span className="settings-icon">⚙️</span>
-          <span>{t('nav.settings')}</span>
-        </button>
+        <div className="settings-section">
+          <button className="settings-btn" onClick={handleSettingsClick}>
+            <span className="settings-icon">⚙️</span>
+            <span>{t('nav.settings')}</span>
+            <span className={`settings-arrow ${showSettings ? 'open' : ''}`}>▼</span>
+          </button>
+          
+          {showSettings && (
+            <div className="settings-dropdown">
+              <button className="settings-option" onClick={handleProfileSettings}>
+                <span className="option-icon">👤</span>
+                <span>Perfil de Usuario</span>
+              </button>
+              <button className="settings-option" onClick={handleSystemSettings}>
+                <span className="option-icon">🔧</span>
+                <span>Configuración del Sistema</span>
+              </button>
+              <button className="settings-option" onClick={handleLanguageChange}>
+                <span className="option-icon">🌐</span>
+                <span>Cambiar Idioma</span>
+              </button>
+              <div className="settings-divider"></div>
+              <button className="settings-option logout" onClick={handleLogout}>
+                <span className="option-icon">🚪</span>
+                <span>Cerrar Sesión</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

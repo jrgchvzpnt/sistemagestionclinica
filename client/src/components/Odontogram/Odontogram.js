@@ -19,6 +19,9 @@ const Odontogram = () => {
     activeOnly: false
   });
   const [odontograms, setOdontograms] = useState([]);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
 
   useEffect(() => {
     fetchOdontograms();
@@ -139,6 +142,29 @@ const Odontogram = () => {
     );
   };
 
+  const handleViewOdontogram = (recordId) => {
+    const record = (odontograms.length > 0 ? odontograms : mockOdontograms).find(r => r._id === recordId);
+    setSelectedRecord(record);
+    setShowViewModal(true);
+  };
+
+  const handleViewHistory = (recordId) => {
+    const record = (odontograms.length > 0 ? odontograms : mockOdontograms).find(r => r._id === recordId);
+    setSelectedRecord(record);
+    setShowHistoryModal(true);
+  };
+
+  const handleUpdateStats = () => {
+    // Refresh stats
+    fetchStats();
+    alert('Estadísticas actualizadas');
+  };
+
+  const handleNewOdontogram = () => {
+    // TODO: Implement new odontogram functionality
+    alert('Crear nuevo odontograma - Funcionalidad próximamente');
+  };
+
   return (
     <div className="odontogram">
       <div className="page-header">
@@ -147,8 +173,22 @@ const Odontogram = () => {
           <p>{t('odontogram.subtitle')}</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary">{t('odontogram.updateStats')}</button>
-          <button className="btn-primary">{t('odontogram.newOdontogram')}</button>
+          <button className="btn-secondary" onClick={handleUpdateStats}>
+            <span>🔄</span>
+            {t('odontogram.updateStats')}
+          </button>
+          <button className="btn-secondary" onClick={() => handleViewOdontogram('1')}>
+            <span>👁️</span>
+            Test Ver Modal
+          </button>
+          <button className="btn-secondary" onClick={() => handleViewHistory('1')}>
+            <span>📋</span>
+            Test History Modal
+          </button>
+          <button className="btn-primary" onClick={handleNewOdontogram}>
+            <span>➕</span>
+            {t('odontogram.newOdontogram')}
+          </button>
         </div>
       </div>
 
@@ -305,8 +345,18 @@ const Odontogram = () => {
 
                 <div className="col-actions">
                   <div className="action-buttons">
-                    <button className="btn-action view">👁️ {t('odontogram.view')}</button>
-                    <button className="btn-action history">📋 {t('odontogram.history')}</button>
+                    <button 
+                      className="btn-action view" 
+                      onClick={() => handleViewOdontogram(record._id)}
+                    >
+                      👁️ {t('odontogram.view')}
+                    </button>
+                    <button 
+                      className="btn-action history" 
+                      onClick={() => handleViewHistory(record._id)}
+                    >
+                      📋 {t('odontogram.history')}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -314,6 +364,170 @@ const Odontogram = () => {
           </div>
         </div>
       </div>
+
+      {/* View Odontogram Modal */}
+      {showViewModal && selectedRecord && (
+        <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>🦷 Ver Odontograma</h2>
+              <button className="modal-close" onClick={() => setShowViewModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="patient-header">
+                <div className="patient-avatar-large">👤</div>
+                <div className="patient-details">
+                  <h3>{selectedRecord.patient.firstName} {selectedRecord.patient.lastName}</h3>
+                  <p>Edad: {selectedRecord.patient.age} años</p>
+                  <p>Doctor: {selectedRecord.doctor.firstName} {selectedRecord.doctor.lastName}</p>
+                  <p>Fecha de examen: {new Date(selectedRecord.examDate).toLocaleDateString()}</p>
+                </div>
+                <div className="record-status">
+                  {getStatusBadge(selectedRecord.status)}
+                  <span className="version-badge">{selectedRecord.version}</span>
+                </div>
+              </div>
+
+              <div className="odontogram-section">
+                <h4>🦷 Mapa Dental</h4>
+                <div className="teeth-grid">
+                  {/* Upper jaw */}
+                  <div className="jaw-section upper">
+                    <h5>Maxilar Superior</h5>
+                    <div className="teeth-row">
+                      {[18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28].map(tooth => (
+                        <div 
+                          key={tooth} 
+                          className={`tooth ${selectedRecord.teethAffected?.includes(tooth) ? 'affected' : ''}`}
+                        >
+                          <span className="tooth-number">{tooth}</span>
+                          <div className="tooth-icon">🦷</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Lower jaw */}
+                  <div className="jaw-section lower">
+                    <h5>Maxilar Inferior</h5>
+                    <div className="teeth-row">
+                      {[48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38].map(tooth => (
+                        <div 
+                          key={tooth} 
+                          className={`tooth ${selectedRecord.teethAffected?.includes(tooth) ? 'affected' : ''}`}
+                        >
+                          <span className="tooth-number">{tooth}</span>
+                          <div className="tooth-icon">🦷</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="treatment-summary">
+                <h4>📋 Resumen de Tratamiento</h4>
+                <div className="summary-grid">
+                  <div className="summary-item">
+                    <span className="summary-label">Progreso:</span>
+                    {getProgressBar(selectedRecord.progress)}
+                  </div>
+                  <div className="summary-item">
+                    <span className="summary-label">Tratamientos:</span>
+                    <span className="summary-value">{selectedRecord.treatments} procedimientos</span>
+                  </div>
+                  <div className="summary-item">
+                    <span className="summary-label">Dientes afectados:</span>
+                    <span className="summary-value">{selectedRecord.teethAffected?.length || 0} dientes</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowViewModal(false)}>Cerrar</button>
+              <button className="btn-primary">Editar Odontograma</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* History Modal */}
+      {showHistoryModal && selectedRecord && (
+        <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📋 Historial de Tratamientos</h2>
+              <button className="modal-close" onClick={() => setShowHistoryModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="patient-header">
+                <div className="patient-avatar-large">👤</div>
+                <div className="patient-details">
+                  <h3>{selectedRecord.patient.firstName} {selectedRecord.patient.lastName}</h3>
+                  <p>Edad: {selectedRecord.patient.age} años</p>
+                </div>
+              </div>
+
+              <div className="history-timeline">
+                <h4>📅 Cronología de Tratamientos</h4>
+                <div className="timeline">
+                  <div className="timeline-item">
+                    <div className="timeline-date">19 Jul 2025</div>
+                    <div className="timeline-content">
+                      <h5>Examen inicial</h5>
+                      <p>Evaluación completa del estado dental. Se identificaron {selectedRecord.teethAffected?.length || 0} dientes que requieren tratamiento.</p>
+                      <span className="timeline-doctor">Dr. {selectedRecord.doctor.lastName}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="timeline-item">
+                    <div className="timeline-date">22 Jul 2025</div>
+                    <div className="timeline-content">
+                      <h5>Limpieza dental</h5>
+                      <p>Profilaxis completa y aplicación de flúor.</p>
+                      <span className="timeline-doctor">Dr. {selectedRecord.doctor.lastName}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="timeline-item">
+                    <div className="timeline-date">25 Jul 2025</div>
+                    <div className="timeline-content">
+                      <h5>Tratamiento de caries</h5>
+                      <p>Restauración de dientes afectados con resina compuesta.</p>
+                      <span className="timeline-doctor">Dr. {selectedRecord.doctor.lastName}</span>
+                    </div>
+                  </div>
+                  
+                  {selectedRecord.progress > 50 && (
+                    <div className="timeline-item">
+                      <div className="timeline-date">28 Jul 2025</div>
+                      <div className="timeline-content">
+                        <h5>Control post-tratamiento</h5>
+                        <p>Revisión del progreso y ajustes necesarios.</p>
+                        <span className="timeline-doctor">Dr. {selectedRecord.doctor.lastName}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="treatment-notes">
+                <h4>📝 Notas del Tratamiento</h4>
+                <div className="notes-content">
+                  <p>• Paciente presenta buena higiene oral</p>
+                  <p>• Responde bien al tratamiento</p>
+                  <p>• Se recomienda control cada 6 meses</p>
+                  <p>• Progreso actual: {selectedRecord.progress}%</p>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowHistoryModal(false)}>Cerrar</button>
+              <button className="btn-primary">Agregar Nota</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

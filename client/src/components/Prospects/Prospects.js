@@ -17,6 +17,9 @@ const Prospects = () => {
     source: 'all',
     status: 'all'
   });
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [selectedProspect, setSelectedProspect] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     fetchProspects();
@@ -206,6 +209,86 @@ const Prospects = () => {
     return sourceMap[source] || '📋';
   };
 
+  const handleActionClick = (prospect) => {
+    setSelectedProspect(prospect);
+    setShowActionModal(true);
+  };
+
+  const handleAddProspect = () => {
+    setShowAddModal(true);
+  };
+
+  const handleUpdateProspectStatus = async (prospectId, newStatus) => {
+    try {
+      const response = await fetch(`/api/prospects/${prospectId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      
+      if (response.ok) {
+        // Update local state
+        setProspects(prev => prev.map(p => 
+          p._id === prospectId ? { ...p, status: newStatus } : p
+        ));
+        setShowActionModal(false);
+        alert(`Prospecto actualizado a: ${newStatus}`);
+      }
+    } catch (error) {
+      console.error('Error updating prospect:', error);
+      alert('Error al actualizar el prospecto');
+    }
+  };
+
+  const handleConvertToPatient = async (prospectId) => {
+    try {
+      const response = await fetch(`/api/prospects/${prospectId}/convert`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        handleUpdateProspectStatus(prospectId, 'converted');
+        alert('¡Prospecto convertido a paciente exitosamente!');
+      }
+    } catch (error) {
+      console.error('Error converting prospect:', error);
+      alert('Error al convertir el prospecto');
+    }
+  };
+
+  const handleDeleteProspect = async (prospectId) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este prospecto?')) {
+      try {
+        const response = await fetch(`/api/prospects/${prospectId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (response.ok) {
+          setProspects(prev => prev.filter(p => p._id !== prospectId));
+          setShowActionModal(false);
+          alert('Prospecto eliminado exitosamente');
+        }
+      } catch (error) {
+        console.error('Error deleting prospect:', error);
+        alert('Error al eliminar el prospecto');
+      }
+    }
+  };
+
+  const refreshData = () => {
+    fetchProspects();
+    fetchStats();
+  };
+
   return (
     <div className="prospects">
       <div className="page-header">
@@ -214,8 +297,12 @@ const Prospects = () => {
           <p>{t('prospects.subtitle')}</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary">{t('prospects.update')}</button>
-          <button className="btn-primary">{t('prospects.addProspect')}</button>
+          <button className="btn-secondary" onClick={refreshData}>
+            🔄 {t('prospects.update')}
+          </button>
+          <button className="btn-primary" onClick={handleAddProspect}>
+            ➕ {t('prospects.addProspect')}
+          </button>
         </div>
       </div>
 
@@ -368,7 +455,12 @@ const Prospects = () => {
 
                 <div className="col-actions">
                   <div className="action-buttons">
-                    <button className="btn-action">{t('prospects.actions')}</button>
+                    <button 
+                      className="btn-action" 
+                      onClick={() => handleActionClick(prospect)}
+                    >
+                      ⚙️ Acciones
+                    </button>
                   </div>
                 </div>
               </div>
@@ -376,6 +468,167 @@ const Prospects = () => {
           </div>
         </div>
       </div>
+
+      {/* Action Modal */}
+      {showActionModal && selectedProspect && (
+        <div className="modal-overlay" onClick={() => setShowActionModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>⚙️ Acciones para {selectedProspect.firstName} {selectedProspect.lastName}</h2>
+              <button className="modal-close" onClick={() => setShowActionModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="prospect-details">
+                <div className="prospect-avatar-large">
+                  {selectedProspect.firstName.charAt(0)}{selectedProspect.lastName.charAt(0)}
+                </div>
+                <div className="prospect-info-modal">
+                  <h3>{selectedProspect.firstName} {selectedProspect.lastName}</h3>
+                  <p>📧 {selectedProspect.email}</p>
+                  <p>📞 {selectedProspect.phone}</p>
+                  <p>🎯 {selectedProspect.serviceInterest}</p>
+                  <p>📍 Fuente: {selectedProspect.source}</p>
+                  <p>👤 Asignado a: {selectedProspect.assignedTo.firstName} {selectedProspect.assignedTo.lastName}</p>
+                </div>
+              </div>
+              
+              <div className="action-buttons-grid">
+                <button 
+                  className="action-btn contact-btn"
+                  onClick={() => handleUpdateProspectStatus(selectedProspect._id, 'contacted')}
+                  disabled={selectedProspect.status === 'contacted'}
+                >
+                  📞 Marcar como Contactado
+                </button>
+                
+                <button 
+                  className="action-btn convert-btn"
+                  onClick={() => handleConvertToPatient(selectedProspect._id)}
+                  disabled={selectedProspect.status === 'converted'}
+                >
+                  ✅ Convertir a Paciente
+                </button>
+                
+                <button 
+                  className="action-btn lost-btn"
+                  onClick={() => handleUpdateProspectStatus(selectedProspect._id, 'lost')}
+                  disabled={selectedProspect.status === 'lost'}
+                >
+                  ❌ Marcar como Perdido
+                </button>
+                
+                <button 
+                  className="action-btn new-btn"
+                  onClick={() => handleUpdateProspectStatus(selectedProspect._id, 'new')}
+                  disabled={selectedProspect.status === 'new'}
+                >
+                  🆕 Marcar como Nuevo
+                </button>
+                
+                <button 
+                  className="action-btn email-btn"
+                  onClick={() => window.open(`mailto:${selectedProspect.email}`, '_blank')}
+                  disabled={!selectedProspect.email}
+                >
+                  📧 Enviar Email
+                </button>
+                
+                <button 
+                  className="action-btn phone-btn"
+                  onClick={() => window.open(`tel:${selectedProspect.phone}`, '_blank')}
+                >
+                  📱 Llamar
+                </button>
+                
+                <button 
+                  className="action-btn edit-btn"
+                  onClick={() => {
+                    setShowActionModal(false);
+                    alert('Función de edición próximamente disponible');
+                  }}
+                >
+                  ✏️ Editar Información
+                </button>
+                
+                <button 
+                  className="action-btn delete-btn"
+                  onClick={() => handleDeleteProspect(selectedProspect._id)}
+                >
+                  🗑️ Eliminar Prospecto
+                </button>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowActionModal(false)}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Prospect Modal */}
+      {showAddModal && (
+        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>➕ Agregar Nuevo Prospecto</h2>
+              <button className="modal-close" onClick={() => setShowAddModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="add-prospect-form">
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Nombre *</label>
+                    <input type="text" placeholder="Ingrese el nombre" />
+                  </div>
+                  <div className="form-group">
+                    <label>Apellido *</label>
+                    <input type="text" placeholder="Ingrese el apellido" />
+                  </div>
+                  <div className="form-group">
+                    <label>Email</label>
+                    <input type="email" placeholder="ejemplo@correo.com" />
+                  </div>
+                  <div className="form-group">
+                    <label>Teléfono *</label>
+                    <input type="tel" placeholder="Ingrese el teléfono" />
+                  </div>
+                  <div className="form-group">
+                    <label>Fuente *</label>
+                    <select>
+                      <option value="">Seleccione una fuente</option>
+                      <option value="Social">Redes Sociales</option>
+                      <option value="Advertisement">Publicidad</option>
+                      <option value="Walk-in">Visita Directa</option>
+                      <option value="Referral">Referencia</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Servicio de Interés *</label>
+                    <input type="text" placeholder="Ej: Consulta General, Ortodoncia" />
+                  </div>
+                </div>
+                <div className="form-group full-width">
+                  <label>Notas Adicionales</label>
+                  <textarea placeholder="Información adicional sobre el prospecto..." rows="3"></textarea>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowAddModal(false)}>
+                Cancelar
+              </button>
+              <button className="btn-primary" onClick={() => {
+                setShowAddModal(false);
+                alert('Función de agregar prospecto próximamente disponible');
+              }}>
+                💾 Guardar Prospecto
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

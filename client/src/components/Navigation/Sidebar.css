@@ -31,16 +31,18 @@
 }
 
 .clinic-info h3 {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: white;
   margin: 0;
 }
 
 .clinic-info p {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #94a3b8;
   margin: 0;
+  line-height: 1.2;
+  font-style: italic;
 }
 
 .user-info {
@@ -194,6 +196,10 @@
   color: #94a3b8;
 }
 
+.settings-section {
+  position: relative;
+}
+
 .settings-btn {
   width: 100%;
   display: flex;
@@ -208,6 +214,7 @@
   cursor: pointer;
   transition: all 0.2s;
   border-radius: 8px;
+  justify-content: space-between;
 }
 
 .settings-btn:hover {
@@ -217,6 +224,83 @@
 
 .settings-icon {
   font-size: 1.125rem;
+}
+
+.settings-arrow {
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+.settings-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* Settings Dropdown */
+.settings-dropdown {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  background-color: #334155;
+  border-radius: 8px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid #475569;
+  z-index: 1000;
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.settings-option:hover {
+  background-color: #475569;
+  color: white;
+}
+
+.settings-option.logout {
+  color: #f87171;
+}
+
+.settings-option.logout:hover {
+  background-color: #7f1d1d;
+  color: #fecaca;
+}
+
+.option-icon {
+  font-size: 1rem;
+  min-width: 16px;
+}
+
+.settings-divider {
+  height: 1px;
+  background-color: #475569;
+  margin: 8px 16px;
 }
 
 /* Scrollbar Styling */

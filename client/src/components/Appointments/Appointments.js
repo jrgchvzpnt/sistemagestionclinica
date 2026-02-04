@@ -18,6 +18,16 @@ const Appointments = () => {
     status: 'all',
     date: 'all'
   });
+  const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false);
+  const [newAppointment, setNewAppointment] = useState({
+    patientId: '',
+    doctorId: '',
+    appointmentDate: '',
+    appointmentTime: '',
+    type: 'consultation',
+    notes: '',
+    duration: 30
+  });
 
   useEffect(() => {
     fetchAppointments();
@@ -187,6 +197,110 @@ const Appointments = () => {
 
   const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
+  const handleNewAppointment = () => {
+    setShowNewAppointmentModal(true);
+  };
+
+  const handleCloseAppointmentModal = () => {
+    setShowNewAppointmentModal(false);
+    setNewAppointment({
+      patientId: '',
+      doctorId: '',
+      appointmentDate: '',
+      appointmentTime: '',
+      type: 'consultation',
+      notes: '',
+      duration: 30
+    });
+  };
+
+  const handleSaveAppointment = async () => {
+    try {
+      // Validate required fields
+      if (!newAppointment.patientId || !newAppointment.doctorId || !newAppointment.appointmentDate || !newAppointment.appointmentTime) {
+        alert('Por favor complete todos los campos requeridos');
+        return;
+      }
+
+      // Combine date and time
+      const appointmentDateTime = new Date(`${newAppointment.appointmentDate}T${newAppointment.appointmentTime}`);
+
+      // Get patient and doctor names for display
+      const patientNames = {
+        '1': { firstName: 'Princess', lastName: 'Stretch' },
+        '2': { firstName: 'Mehdi', lastName: "O'Keefe" },
+        '3': { firstName: 'Ariane', lastName: 'McKenzie' },
+        '4': { firstName: 'Lessie', lastName: 'Abbott' },
+        '5': { firstName: 'Merle', lastName: 'Prosacco' }
+      };
+
+      const doctorNames = {
+        '1': { firstName: 'Dr. Lura', lastName: 'Weimann' },
+        '2': { firstName: 'Dr. Deshawn', lastName: 'Barton' },
+        '3': { firstName: 'Dr. Pierce', lastName: "O'Conner" }
+      };
+
+      const newAppointmentData = {
+        _id: Date.now().toString(),
+        patient: patientNames[newAppointment.patientId],
+        doctor: doctorNames[newAppointment.doctorId],
+        appointmentDate: appointmentDateTime.toISOString(),
+        type: newAppointment.type,
+        status: 'scheduled',
+        notes: newAppointment.notes,
+        duration: newAppointment.duration
+      };
+
+      try {
+        // TODO: Replace with actual API call
+        const response = await fetch('/api/appointments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(newAppointmentData)
+        });
+
+        if (response.ok) {
+          alert('Cita creada exitosamente');
+          handleCloseAppointmentModal();
+          fetchAppointments(); // Refresh the list
+          return;
+        }
+      } catch (apiError) {
+        console.log('API not available, using demo mode');
+      }
+
+      // Demo mode: Add to local state
+      setAppointments(prevAppointments => [...prevAppointments, newAppointmentData]);
+      
+      // Update stats
+      setStats(prevStats => ({
+        ...prevStats,
+        pending: prevStats.pending + 1
+      }));
+
+      alert('Cita creada exitosamente (modo demo)');
+      handleCloseAppointmentModal();
+    } catch (error) {
+      console.error('Error saving appointment:', error);
+      alert('Error al crear la cita');
+    }
+  };
+
+  const handleEditAppointment = (appointmentId) => {
+    // TODO: Implement edit appointment functionality
+    alert(`Editar cita ${appointmentId}`);
+  };
+
+  const handleDeleteAppointment = (appointmentId) => {
+    // TODO: Implement delete appointment functionality
+    if (window.confirm('¿Está seguro de que desea eliminar esta cita?')) {
+      alert(`Cita ${appointmentId} eliminada`);
+    }
+  };
+
   return (
     <div className="appointments">
       <div className="page-header">
@@ -195,7 +309,10 @@ const Appointments = () => {
           <p>{t('appointments.subtitle')}</p>
         </div>
         <div className="header-actions">
-          <button className="btn-primary">{t('appointments.newAppointment')}</button>
+          <button className="btn-primary" onClick={handleNewAppointment}>
+            <span>➕</span>
+            {t('appointments.newAppointment')}
+          </button>
         </div>
       </div>
 
@@ -265,13 +382,13 @@ const Appointments = () => {
 
         <div className="view-toggle">
           <button 
-            className={`btn-toggle ${viewMode === 'table' ? 'active' : ''}`}
+            className={`view-button ${viewMode === 'table' ? 'active' : ''}`}
             onClick={() => setViewMode('table')}
           >
             📋 {t('appointments.tableView')}
           </button>
           <button 
-            className={`btn-toggle ${viewMode === 'calendar' ? 'active' : ''}`}
+            className={`view-button ${viewMode === 'calendar' ? 'active' : ''}`}
             onClick={() => setViewMode('calendar')}
           >
             📅 {t('appointments.calendarView')}
@@ -283,61 +400,55 @@ const Appointments = () => {
       {viewMode === 'calendar' && (
         <div className="calendar-section">
           <div className="calendar-header">
-            <div className="calendar-navigation">
-              <button onClick={() => navigateMonth(-1)}>‹</button>
-              <h2>{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</h2>
-              <button onClick={() => navigateMonth(1)}>›</button>
+            <div className="calendar-nav">
+              <button className="nav-button" onClick={() => navigateMonth(-1)}>‹</button>
+              <h2 className="month-year">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</h2>
+              <button className="nav-button" onClick={() => navigateMonth(1)}>›</button>
             </div>
-            <button className="btn-today" onClick={() => setCurrentDate(new Date())}>
+            <button className="nav-button" onClick={() => setCurrentDate(new Date())}>
               {t('appointments.today')}
             </button>
           </div>
 
           <div className="calendar-grid">
-            <div className="calendar-weekdays">
-              {dayNames.map(day => (
-                <div key={day} className="weekday">{day}</div>
-              ))}
-            </div>
-
-            <div className="calendar-days">
-              {generateCalendar().map((week, weekIndex) => (
-                <div key={weekIndex} className="calendar-week">
-                  {week.map((day, dayIndex) => (
-                    <div 
-                      key={dayIndex} 
-                      className={`calendar-day ${!day.isCurrentMonth ? 'other-month' : ''} ${day.isToday ? 'today' : ''}`}
-                    >
-                      <div className="day-number">{day.date.getDate()}</div>
-                      <div className="day-appointments">
-                        {day.appointments.slice(0, 3).map((apt, aptIndex) => (
-                          <div key={aptIndex} className={`appointment-item ${apt.status}`}>
-                            <span className="appointment-time">
-                              {new Date(apt.appointmentDate).toLocaleTimeString('es-ES', { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
-                            </span>
-                            <span className="appointment-patient">
-                              {apt.patient.firstName} {apt.patient.lastName}
-                            </span>
-                          </div>
-                        ))}
-                        {day.appointments.length > 3 && (
-                          <div className="more-appointments">
-                            +{day.appointments.length - 3} más
-                          </div>
-                        )}
+            {dayNames.map(day => (
+              <div key={day} className="calendar-day-header">{day}</div>
+            ))}
+            
+            {generateCalendar().map((week, weekIndex) => 
+              week.map((day, dayIndex) => (
+                <div 
+                  key={`${weekIndex}-${dayIndex}`} 
+                  className={`calendar-day ${!day.isCurrentMonth ? 'other-month' : ''} ${day.isToday ? 'today' : ''}`}
+                >
+                  <div className="day-number">{day.date.getDate()}</div>
+                  <div className="calendar-appointments">
+                    {day.appointments.slice(0, 3).map((apt, aptIndex) => (
+                      <div key={aptIndex} className={`calendar-appointment ${apt.status}`}>
+                        <div className="appointment-time">
+                          {new Date(apt.appointmentDate).toLocaleTimeString('es-ES', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </div>
+                        <div className="appointment-patient">
+                          {apt.patient.firstName}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                    {day.appointments.length > 3 && (
+                      <div className="more-appointments">
+                        +{day.appointments.length - 3} más
+                      </div>
+                    )}
+                  </div>
                 </div>
-              ))}
-            </div>
+              ))
+            )}
           </div>
 
           {/* Calendar Legend */}
-          <div className="calendar-legend">
+          <div className="appointment-legend">
             <div className="legend-item">
               <span className="legend-color completed"></span>
               <span>{t('appointments.completed')}</span>
@@ -352,7 +463,7 @@ const Appointments = () => {
             </div>
             <div className="legend-item">
               <span className="legend-color no-show"></span>
-              <span>{t('appointments.noShow')}</span>
+              <span>No Asistió</span>
             </div>
           </div>
         </div>
@@ -408,12 +519,135 @@ const Appointments = () => {
 
                 <div className="col-actions">
                   <div className="action-buttons">
-                    <button className="btn-action edit">✏️</button>
-                    <button className="btn-action delete">🗑️</button>
+                    <button 
+                      className="btn-action edit" 
+                      onClick={() => handleEditAppointment(appointment._id)}
+                      title="Editar cita"
+                    >
+                      ✏️
+                    </button>
+                    <button 
+                      className="btn-action delete" 
+                      onClick={() => handleDeleteAppointment(appointment._id)}
+                      title="Eliminar cita"
+                    >
+                      🗑️
+                    </button>
                   </div>
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* New Appointment Modal */}
+      {showNewAppointmentModal && (
+        <div className="modal-overlay" onClick={handleCloseAppointmentModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Nueva Cita</h2>
+              <button className="modal-close" onClick={handleCloseAppointmentModal}>✕</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Paciente *</label>
+                  <select
+                    value={newAppointment.patientId}
+                    onChange={(e) => setNewAppointment({...newAppointment, patientId: e.target.value})}
+                  >
+                    <option value="">Seleccionar paciente</option>
+                    <option value="1">Princess Stretch</option>
+                    <option value="2">Mehdi O'Keefe</option>
+                    <option value="3">Ariane McKenzie</option>
+                    <option value="4">Lessie Abbott</option>
+                    <option value="5">Merle Prosacco</option>
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label>Doctor *</label>
+                  <select
+                    value={newAppointment.doctorId}
+                    onChange={(e) => setNewAppointment({...newAppointment, doctorId: e.target.value})}
+                  >
+                    <option value="">Seleccionar doctor</option>
+                    <option value="1">Dr. Lura Weimann</option>
+                    <option value="2">Dr. Deshawn Barton</option>
+                    <option value="3">Dr. Pierce O'Conner</option>
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label>Fecha *</label>
+                  <input
+                    type="date"
+                    value={newAppointment.appointmentDate}
+                    onChange={(e) => setNewAppointment({...newAppointment, appointmentDate: e.target.value})}
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Hora *</label>
+                  <input
+                    type="time"
+                    value={newAppointment.appointmentTime}
+                    onChange={(e) => setNewAppointment({...newAppointment, appointmentTime: e.target.value})}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Tipo de Cita</label>
+                  <select
+                    value={newAppointment.type}
+                    onChange={(e) => setNewAppointment({...newAppointment, type: e.target.value})}
+                  >
+                    <option value="consultation">Consulta</option>
+                    <option value="procedure">Procedimiento</option>
+                    <option value="check-up">Revisión</option>
+                    <option value="follow-up">Seguimiento</option>
+                    <option value="emergency">Emergencia</option>
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label>Duración (minutos)</label>
+                  <select
+                    value={newAppointment.duration}
+                    onChange={(e) => setNewAppointment({...newAppointment, duration: parseInt(e.target.value)})}
+                  >
+                    <option value="15">15 minutos</option>
+                    <option value="30">30 minutos</option>
+                    <option value="45">45 minutos</option>
+                    <option value="60">1 hora</option>
+                    <option value="90">1.5 horas</option>
+                    <option value="120">2 horas</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="form-group full-width">
+                <label>Notas</label>
+                <textarea
+                  value={newAppointment.notes}
+                  onChange={(e) => setNewAppointment({...newAppointment, notes: e.target.value})}
+                  placeholder="Notas adicionales sobre la cita..."
+                  rows="3"
+                />
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={handleCloseAppointmentModal}>
+                Cancelar
+              </button>
+              <button className="btn-primary" onClick={handleSaveAppointment}>
+                Crear Cita
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -18,6 +18,9 @@ const Prescriptions = () => {
     doctor: 'all',
     timeRange: 'all'
   });
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [selectedPrescription, setSelectedPrescription] = useState(null);
+  const [showNewPrescriptionModal, setShowNewPrescriptionModal] = useState(false);
 
   useEffect(() => {
     fetchPrescriptions();
@@ -167,6 +170,112 @@ const Prescriptions = () => {
     );
   };
 
+  const handleActionClick = (prescription) => {
+    setSelectedPrescription(prescription);
+    setShowActionModal(true);
+  };
+
+  const handleNewPrescription = () => {
+    setShowNewPrescriptionModal(true);
+  };
+
+  const handleUpdatePrescriptionStatus = async (prescriptionId, newStatus) => {
+    try {
+      const response = await fetch(`/api/prescriptions/${prescriptionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      
+      if (response.ok) {
+        // Update local state
+        setPrescriptions(prev => prev.map(p => 
+          p._id === prescriptionId ? { ...p, status: newStatus } : p
+        ));
+        setShowActionModal(false);
+        alert(`Receta actualizada a: ${newStatus}`);
+      }
+    } catch (error) {
+      console.error('Error updating prescription:', error);
+      alert('Error al actualizar la receta');
+    }
+  };
+
+  const handlePrintPrescription = (prescription) => {
+    // Create a printable prescription
+    const printWindow = window.open('', '_blank');
+    const printContent = `
+      <html>
+        <head>
+          <title>Receta Médica - ${prescription._id}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+            .prescription-info { margin-bottom: 20px; }
+            .medications { border: 1px solid #ccc; padding: 15px; margin: 20px 0; }
+            .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>RECETA MÉDICA</h1>
+            <p>ID: ${prescription._id}</p>
+          </div>
+          <div class="prescription-info">
+            <p><strong>Paciente:</strong> ${prescription.patient.firstName} ${prescription.patient.lastName}</p>
+            <p><strong>Edad:</strong> ${prescription.patient.age} años</p>
+            <p><strong>Doctor:</strong> ${prescription.doctor.firstName} ${prescription.doctor.lastName}</p>
+            <p><strong>Fecha:</strong> ${new Date(prescription.createdAt).toLocaleDateString()}</p>
+            <p><strong>Diagnóstico:</strong> ${prescription.diagnosis}</p>
+          </div>
+          <div class="medications">
+            <h3>Medicamentos Prescritos:</h3>
+            ${prescription.medications.map(med => `
+              <p><strong>${med.name}</strong> - ${med.dosage}</p>
+            `).join('')}
+          </div>
+          <div class="footer">
+            <p>Esta receta fue generada electrónicamente el ${new Date().toLocaleString()}</p>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const handleDeletePrescription = async (prescriptionId) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta receta?')) {
+      try {
+        const response = await fetch(`/api/prescriptions/${prescriptionId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (response.ok) {
+          setPrescriptions(prev => prev.filter(p => p._id !== prescriptionId));
+          setShowActionModal(false);
+          alert('Receta eliminada exitosamente');
+        }
+      } catch (error) {
+        console.error('Error deleting prescription:', error);
+        alert('Error al eliminar la receta');
+      }
+    }
+  };
+
+  const refreshData = () => {
+    fetchPrescriptions();
+    fetchStats();
+  };
+
   return (
     <div className="prescriptions">
       <div className="page-header">
@@ -175,7 +284,9 @@ const Prescriptions = () => {
           <p>{t('prescriptions.subtitle')}</p>
         </div>
         <div className="header-actions">
-          <button className="btn-primary">{t('prescriptions.newPrescription')}</button>
+          <button className="btn-primary" onClick={handleNewPrescription}>
+            ➕ {t('prescriptions.newPrescription')}
+          </button>
         </div>
       </div>
 
@@ -326,7 +437,12 @@ const Prescriptions = () => {
 
                 <div className="col-actions">
                   <div className="action-buttons">
-                    <button className="btn-action">{t('prescriptions.actions')}</button>
+                    <button 
+                      className="btn-action" 
+                      onClick={() => handleActionClick(prescription)}
+                    >
+                      ⚙️ Acciones
+                    </button>
                   </div>
                 </div>
               </div>
@@ -334,6 +450,194 @@ const Prescriptions = () => {
           </div>
         </div>
       </div>
+
+      {/* Action Modal */}
+      {showActionModal && selectedPrescription && (
+        <div className="modal-overlay" onClick={() => setShowActionModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>💊 Acciones para Receta {selectedPrescription._id}</h2>
+              <button className="modal-close" onClick={() => setShowActionModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="prescription-details">
+                <div className="prescription-icon-large">📋</div>
+                <div className="prescription-info-modal">
+                  <h3>Receta {selectedPrescription._id}</h3>
+                  <p>👤 Paciente: {selectedPrescription.patient.firstName} {selectedPrescription.patient.lastName}</p>
+                  <p>🩺 Doctor: {selectedPrescription.doctor.firstName} {selectedPrescription.doctor.lastName}</p>
+                  <p>📅 Fecha: {new Date(selectedPrescription.createdAt).toLocaleDateString()}</p>
+                  <p>🔍 Diagnóstico: {selectedPrescription.diagnosis}</p>
+                  <div className="medications-info">
+                    <p><strong>💊 Medicamentos:</strong></p>
+                    {selectedPrescription.medications.map((med, index) => (
+                      <p key={index}>• {med.name} - {med.dosage}</p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="action-buttons-grid">
+                <button 
+                  className="action-btn print-btn"
+                  onClick={() => handlePrintPrescription(selectedPrescription)}
+                >
+                  🖨️ Imprimir Receta
+                </button>
+                
+                <button 
+                  className="action-btn active-btn"
+                  onClick={() => handleUpdatePrescriptionStatus(selectedPrescription._id, 'active')}
+                  disabled={selectedPrescription.status === 'active'}
+                >
+                  ✅ Marcar como Activa
+                </button>
+                
+                <button 
+                  className="action-btn pending-btn"
+                  onClick={() => handleUpdatePrescriptionStatus(selectedPrescription._id, 'pending')}
+                  disabled={selectedPrescription.status === 'pending'}
+                >
+                  ⏳ Marcar como Pendiente
+                </button>
+                
+                <button 
+                  className="action-btn completed-btn"
+                  onClick={() => handleUpdatePrescriptionStatus(selectedPrescription._id, 'completed')}
+                  disabled={selectedPrescription.status === 'completed'}
+                >
+                  ✅ Marcar como Completada
+                </button>
+                
+                <button 
+                  className="action-btn dispensed-btn"
+                  onClick={() => handleUpdatePrescriptionStatus(selectedPrescription._id, 'dispensed')}
+                  disabled={selectedPrescription.status === 'dispensed'}
+                >
+                  💊 Marcar como Dispensada
+                </button>
+                
+                <button 
+                  className="action-btn edit-btn"
+                  onClick={() => {
+                    setShowActionModal(false);
+                    alert('Función de edición próximamente disponible');
+                  }}
+                >
+                  ✏️ Editar Receta
+                </button>
+                
+                <button 
+                  className="action-btn duplicate-btn"
+                  onClick={() => {
+                    setShowActionModal(false);
+                    alert('Función de duplicar próximamente disponible');
+                  }}
+                >
+                  📋 Duplicar Receta
+                </button>
+                
+                <button 
+                  className="action-btn delete-btn"
+                  onClick={() => handleDeletePrescription(selectedPrescription._id)}
+                >
+                  🗑️ Eliminar Receta
+                </button>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowActionModal(false)}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Prescription Modal */}
+      {showNewPrescriptionModal && (
+        <div className="modal-overlay" onClick={() => setShowNewPrescriptionModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>➕ Nueva Receta Médica</h2>
+              <button className="modal-close" onClick={() => setShowNewPrescriptionModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="new-prescription-form">
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Paciente *</label>
+                    <select>
+                      <option value="">Seleccione un paciente</option>
+                      <option value="1">Ariane McKenzie</option>
+                      <option value="2">Lessie Abbott</option>
+                      <option value="3">Brando Sanford</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Doctor *</label>
+                    <select>
+                      <option value="">Seleccione un doctor</option>
+                      <option value="1">Henri Schmitt</option>
+                      <option value="2">Lura Weimann</option>
+                      <option value="3">Deshawn Barton</option>
+                      <option value="4">Pierce O'Conner</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="form-group full-width">
+                  <label>Diagnóstico *</label>
+                  <textarea placeholder="Ingrese el diagnóstico médico..." rows="3"></textarea>
+                </div>
+                
+                <div className="medications-section">
+                  <h4>💊 Medicamentos</h4>
+                  <div className="medication-entry">
+                    <div className="form-grid">
+                      <div className="form-group">
+                        <label>Medicamento *</label>
+                        <input type="text" placeholder="Nombre del medicamento" />
+                      </div>
+                      <div className="form-group">
+                        <label>Dosis *</label>
+                        <input type="text" placeholder="Ej: 500mg" />
+                      </div>
+                      <div className="form-group">
+                        <label>Frecuencia</label>
+                        <input type="text" placeholder="Ej: Cada 8 horas" />
+                      </div>
+                      <div className="form-group">
+                        <label>Duración</label>
+                        <input type="text" placeholder="Ej: 7 días" />
+                      </div>
+                    </div>
+                  </div>
+                  <button type="button" className="btn-secondary add-medication">
+                    ➕ Agregar Medicamento
+                  </button>
+                </div>
+                
+                <div className="form-group full-width">
+                  <label>Instrucciones Adicionales</label>
+                  <textarea placeholder="Instrucciones especiales para el paciente..." rows="2"></textarea>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowNewPrescriptionModal(false)}>
+                Cancelar
+              </button>
+              <button className="btn-primary" onClick={() => {
+                setShowNewPrescriptionModal(false);
+                alert('Función de crear receta próximamente disponible');
+              }}>
+                💾 Crear Receta
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

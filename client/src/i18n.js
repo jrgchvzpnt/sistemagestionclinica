@@ -87,12 +87,19 @@ const resources = {
         revenueSummary: 'Resumen de Ingresos',
         appointmentStatus: 'Estado de Citas',
         viewDetails: 'Ver Detalles',
+        viewAll: 'Ver Todo',
         seeAll: 'Ver Todo',
         apiConnectionTest: 'Prueba de Conexión API',
         connected: 'Conectado',
         status: 'Estado',
         timestamp: 'Marca de tiempo',
-        runningAndAvailable: 'La API del backend está funcionando y disponible'
+        runningAndAvailable: 'La API del backend está funcionando y disponible',
+        revenueChart: 'Gráfico de Ingresos',
+        chartPlaceholder: 'Aquí se mostrará el gráfico de ingresos',
+        noAppointments: 'No hay citas recientes',
+        noLeads: 'No hay leads recientes',
+        apiConnected: 'API Conectada',
+        lastUpdate: 'Última actualización'
       },
 
       // Lab Providers

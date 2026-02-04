@@ -198,6 +198,210 @@ const Billing = () => {
     return bills.filter(b => b.status === 'Vencida').reduce((sum, bill) => sum + bill.total, 0);
   };
 
+  const handlePrintBill = (bill) => {
+    const printWindow = window.open('', '_blank');
+    const printContent = `
+      <html>
+        <head>
+          <title>Factura - ${bill.billNumber}</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              padding: 20px; 
+              line-height: 1.6;
+              color: #333;
+            }
+            .header { 
+              text-align: center; 
+              border-bottom: 3px solid #007bff; 
+              padding-bottom: 20px; 
+              margin-bottom: 30px; 
+            }
+            .header h1 {
+              color: #007bff;
+              margin: 0;
+              font-size: 2.5rem;
+            }
+            .bill-info { 
+              display: flex; 
+              justify-content: space-between; 
+              margin-bottom: 30px; 
+            }
+            .bill-details, .patient-details {
+              flex: 1;
+              padding: 0 15px;
+            }
+            .bill-details h3, .patient-details h3 {
+              color: #007bff;
+              border-bottom: 1px solid #ddd;
+              padding-bottom: 5px;
+            }
+            .services-table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin: 20px 0; 
+            }
+            .services-table th, .services-table td { 
+              border: 1px solid #ddd; 
+              padding: 12px; 
+              text-align: left; 
+            }
+            .services-table th { 
+              background-color: #f8f9fa; 
+              font-weight: bold;
+              color: #495057;
+            }
+            .services-table tr:nth-child(even) {
+              background-color: #f8f9fa;
+            }
+            .totals { 
+              margin-top: 20px; 
+              text-align: right; 
+            }
+            .totals table {
+              margin-left: auto;
+              border-collapse: collapse;
+            }
+            .totals td {
+              padding: 8px 15px;
+              border: none;
+            }
+            .totals .total-row {
+              font-weight: bold;
+              font-size: 1.2rem;
+              border-top: 2px solid #007bff;
+              color: #007bff;
+            }
+            .payment-info {
+              margin-top: 30px;
+              padding: 20px;
+              background-color: #f8f9fa;
+              border-radius: 5px;
+            }
+            .footer { 
+              margin-top: 40px; 
+              text-align: center; 
+              font-size: 12px; 
+              color: #666; 
+              border-top: 1px solid #ddd;
+              padding-top: 20px;
+            }
+            .status-badge {
+              display: inline-block;
+              padding: 5px 10px;
+              border-radius: 15px;
+              font-size: 0.9rem;
+              font-weight: bold;
+            }
+            .status-pagada { background-color: #d4edda; color: #155724; }
+            .status-pendiente { background-color: #fff3cd; color: #856404; }
+            .status-vencida { background-color: #f8d7da; color: #721c24; }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>FACTURA MÉDICA</h1>
+            <p>Clínica Dental</p>
+          </div>
+          
+          <div class="bill-info">
+            <div class="bill-details">
+              <h3>Información de la Factura</h3>
+              <p><strong>Número:</strong> ${bill.billNumber}</p>
+              <p><strong>Fecha de Emisión:</strong> ${new Date(bill.date).toLocaleDateString()}</p>
+              <p><strong>Fecha de Vencimiento:</strong> ${new Date(bill.dueDate).toLocaleDateString()}</p>
+              <p><strong>Estado:</strong> <span class="status-badge status-${bill.status.toLowerCase()}">${bill.status}</span></p>
+            </div>
+            
+            <div class="patient-details">
+              <h3>Información del Paciente</h3>
+              <p><strong>Nombre:</strong> ${bill.patientName}</p>
+              <p><strong>Email:</strong> ${bill.patientEmail}</p>
+              ${bill.insuranceProvider ? `<p><strong>Seguro:</strong> ${bill.insuranceProvider}</p>` : ''}
+              ${bill.insuranceCoverage ? `<p><strong>Cobertura:</strong> ${bill.insuranceCoverage}%</p>` : ''}
+            </div>
+          </div>
+          
+          <h3>Servicios Prestados</h3>
+          <table class="services-table">
+            <thead>
+              <tr>
+                <th>Servicio</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${bill.services.map(service => `
+                <tr>
+                  <td>${service.name}</td>
+                  <td>${service.quantity}</td>
+                  <td>$${service.price.toLocaleString()}</td>
+                  <td>$${service.total.toLocaleString()}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div class="totals">
+            <table>
+              <tr>
+                <td>Subtotal:</td>
+                <td>$${bill.subtotal.toLocaleString()}</td>
+              </tr>
+              ${bill.discount > 0 ? `
+                <tr>
+                  <td>Descuento:</td>
+                  <td>-$${bill.discount.toLocaleString()}</td>
+                </tr>
+              ` : ''}
+              ${bill.tax > 0 ? `
+                <tr>
+                  <td>Impuestos:</td>
+                  <td>$${bill.tax.toLocaleString()}</td>
+                </tr>
+              ` : ''}
+              <tr class="total-row">
+                <td>TOTAL:</td>
+                <td>$${bill.total.toLocaleString()}</td>
+              </tr>
+              ${bill.insuranceCoverage > 0 ? `
+                <tr>
+                  <td>Cobertura del Seguro (${bill.insuranceCoverage}%):</td>
+                  <td>-$${(bill.total * bill.insuranceCoverage / 100).toFixed(0)}</td>
+                </tr>
+                <tr class="total-row">
+                  <td>PAGO DEL PACIENTE:</td>
+                  <td>$${bill.patientPayment ? bill.patientPayment.toLocaleString() : (bill.total - (bill.total * bill.insuranceCoverage / 100)).toFixed(0)}</td>
+                </tr>
+              ` : ''}
+            </table>
+          </div>
+          
+          <div class="payment-info">
+            <h3>Información de Pago</h3>
+            <p><strong>Método de Pago:</strong> ${bill.paymentMethod}</p>
+            ${bill.notes ? `<p><strong>Notas:</strong> ${bill.notes}</p>` : ''}
+          </div>
+          
+          <div class="footer">
+            <p>Esta factura fue generada electrónicamente el ${new Date().toLocaleString()}</p>
+            <p>Gracias por confiar en nuestros servicios médicos</p>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   if (loading) {
     return (
       <div className="page-container">
@@ -341,6 +545,7 @@ const Billing = () => {
                       </button>
                       <button
                         className="btn-icon-small"
+                        onClick={() => handlePrintBill(bill)}
                         title="Imprimir"
                       >
                         🖨️
